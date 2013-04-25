@@ -1,7 +1,7 @@
 ab-graph
 ========
 
-Bash script to benchmark some URLs with ab, and draw a graph of the results
+Bash script to benchmark some URLs with ab, and draw a graph of the results with gnuplot.
 
 I've used it on Ubuntu but should work on any Linux.
 
@@ -17,4 +17,8 @@ Usage: ./ab-graph -n <requests> -c <threads> URL1 [URL2] [URL3]..
   -n <requests> : number of requests (default 100)
   -h : this usage message
 
+The `example.png` was generated with this command line:
 
+    ./ab-graph http://google.co.uk/ http://yahoo.co.uk/
+
+    
