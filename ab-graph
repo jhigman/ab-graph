@@ -1,0 +1,79 @@
+#!/bin/bash
+
+usage() {
+  echo "Usage: $0 -n <requests> -c <threads> URL1 [URL2] [URL3].."
+  echo "  -c <threads> : number of threads (default 10)"
+  echo "  -n <requests> : number of requests (default 100)"
+  echo "  -h : this usage message"
+}
+
+THREADS=10
+REQUESTS=100
+
+while getopts "hc:n:" opt; do
+  case $opt in
+    c)
+      THREADS=$OPTARG
+      ;;
+    n)
+      REQUESTS=$OPTARG
+      ;;
+    h)
+      usage
+      exit
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [ $# -lt 1 ]
+then
+  usage
+  exit
+fi
+
+TITLE="$REQUESTS reqs, $THREADS threads"
+
+name=`basename $0`
+TEST="${name%.*}"
+
+# rm $TEST-*
+# rm graph.png
+
+TEMPLATE="template.p"
+
+COUNTER=0
+for URL in "$@"
+do
+  COUNTER=$((COUNTER + 1))
+  echo "ab -n $REQUESTS -c $THREADS -g $COUNTER.out \"$URL\""
+  ab -n $REQUESTS -c $THREADS -g $COUNTER.out "$URL"
+done
+
+rm $TEMPLATE
+echo "set terminal png" > $TEMPLATE
+echo "set output 'graph.png'" >> $TEMPLATE
+echo "set title '$TITLE'" >> $TEMPLATE
+echo "set size 1,0.7" >> $TEMPLATE
+echo "set grid y" >> $TEMPLATE
+echo "set xlabel 'request'" >> $TEMPLATE
+echo "set ylabel 'response time (ms)'" >> $TEMPLATE
+
+LINE="plot "
+COUNTER=0
+for URL in "$@"
+do
+  COUNTER=$((COUNTER + 1))
+  LINE="$LINE '$COUNTER.out' using 9 smooth sbezier with lines title '$URL'"
+  if [ $COUNTER -ne $# ]
+  then
+    LINE="$LINE,"
+  fi
+done
+echo $LINE >> $TEMPLATE
+
+gnuplot $TEMPLATE
+
+display graph.png&
+
+exit
